@@ -81,6 +81,7 @@ class InputFile:
             for name, text in self._input_dict.items():
                 f.write("$"+name+"\n")
                 f.write(text)
+            f.write("$end")
 
     @staticmethod
     def _format_opt(number):
