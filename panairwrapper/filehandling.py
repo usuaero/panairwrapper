@@ -17,6 +17,7 @@ http://www.pdas.com/panairrefs.html
 
 """
 from collections import OrderedDict
+import numpy as np
 
 
 class InputFile:
@@ -262,3 +263,44 @@ class InputFile:
             offbody_input += "\n"
 
         self._input_dict["XYZ OF OFF-BODY POINTS"] = offbody_input
+
+
+class OutputFile:
+    """Handles the parsing of Panair output file.
+
+    Data for the output blocks listed in the panair.out file generated
+    by Panair is parsed and then made available in numpy arrays.
+    """
+    def __init__(self, directory):
+        self._directory = directory
+
+    def _get_block(self, block_name):
+        # retrieves lines inside block
+        begin_flag = "0*b*"+block_name
+        end_flag = "0*e*"+block_name
+        with open(self._directory+"panair.out") as f:
+            lines = f.readlines()
+            count = 0
+            while begin_flag not in lines[count]:
+                count += 1
+            front = count+1
+            while end_flag not in lines[count]:
+                count += 1
+            back = count
+
+            return lines[front:back]
+
+    @staticmethod
+    def _lines_to_numpy(data_lines):
+        # converts lines that hold column data into numpy array
+        array = [[float(val) for val in line.split()] for line in data_lines]
+
+        return np.array(array)
+
+    def get_offbody_data(self):
+        block_lines = self._get_block("off-body")
+        data_lines = block_lines[6:]
+
+        data = self._lines_to_numpy(data_lines)
+
+        return data
