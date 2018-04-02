@@ -81,14 +81,17 @@ class Case:
     --------
 
     """
-    def __init__(self, title, description=""):
+    def __init__(self, title, directory="./", description=""):
         self._title = title
+        self._directory = directory+"/panair_files/"
+        self._filename = self._title.replace(" ", "_")+".INP"
         self._description = description
         self._aero_state = None
         self._symmetry = [True, False]
         self._networks = []
-        self._results = None
         self._offbody_points = None
+        self._overwrite = True
+        self._results = Results(self._directory)
 
     def _generate_inputfile(self):
 
@@ -144,7 +147,6 @@ class Case:
                                                     self._offbody_points)
 
         # write inputfile
-        self._filename = self._title.replace(" ", "_")+".INP"
         inputfile.write_inputfile(self._directory+self._filename)
 
     def set_aero_state(self, mach=0, alpha=0, beta=0):
@@ -168,9 +170,10 @@ class Case:
 
         """
         self._generate_dir()
-        self._generate_inputfile()
-        self._call_panair()
-        self._results = Results(self._directory)
+        if self._overwrite:
+            self._generate_inputfile()
+            self._call_panair()
+
         return self._results
         # if self._check_if_successful():
         #     self._gather_results()
@@ -180,19 +183,24 @@ class Case:
 
     def _generate_dir(self):
         # create directory for case if it doesn't exist
-        self._directory = "./"+self._title.replace(" ", "_")+"/"
         if not os.path.exists(self._directory):
             os.makedirs(self._directory)
         else:
-            # remove old files
-            files = os.listdir(self._directory)
-            for f in files:
-                if f.startswith('rwms'):
-                    os.remove(os.path.join(self._directory, f))
+            overwrite = input("Case folder already exists. Overwrite? (y/n)")
+            if overwrite == "y":
+                self._overwrite = True
+                # remove old files
+                files = os.listdir(self._directory)
+                for f in files:
+                    if f.startswith('rwms'):
+                        os.remove(os.path.join(self._directory, f))
+            elif overwrite == "n":
+                self._overwrite = False
+            else:
+                raise RuntimeError("option not recognized")
 
         # copy in panair.exec
         shutil.copy2('./panair', self._directory)
-
 
     def _call_panair(self):
         p = subprocess.Popen('./panair', stdin=subprocess.PIPE,
