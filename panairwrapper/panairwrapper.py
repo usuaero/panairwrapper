@@ -85,6 +85,7 @@ class Case:
         self._title = title
         self._description = description
         self._aero_state = None
+        self._symmetry = [True, False]
         self._networks = []
         self._results = None
         self._offbody_points = None
@@ -95,7 +96,7 @@ class Case:
         inputfile = fh.InputFile()
         inputfile.title(self._title, self._description)
         inputfile.datacheck(0)
-        inputfile.symmetric(1, 0)
+        inputfile.symmetric(int(self._symmetry[0]), int(self._symmetry[1]))
 
         # aerodynamic state inputs
         if self._aero_state:
