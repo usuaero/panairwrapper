@@ -58,6 +58,7 @@ import panairwrapper.filehandling as fh
 import os
 import subprocess
 import shutil
+import numpy as np
 
 
 class Case:
@@ -155,8 +156,34 @@ class Case:
     def add_network(self, network_name, network_data, network_type=1):
         self._networks.append([network_name, network_data, network_type])
 
+    def update_network(self, network_name, network_data):
+        found = False
+        for n in self._networks:
+            if n[0] == network_name:
+                n[1] = network_data
+                found = True
+
+        if not found:
+            raise RuntimeError(network_name+" network name not found")
+
     def add_offbody_points(self, offbody_points):
         self._offbody_points = offbody_points
+
+    def set_sensor(self, mach, r_over_l, l):
+        n_points = 1000
+
+        mu = np.arcsin(1./mach)
+        R = r_over_l*l
+        x_start = R/np.tan(mu)-0.01*l
+        x_end = x_start+2*l
+        off_body_points = np.zeros((n_points, 3))
+        off_body_points[:, 0] = np.linspace(x_start, x_end, n_points)
+        off_body_points[:, 2] = -R
+
+        self.add_offbody_points(off_body_points)
+
+    def set_symmetry(self, xz_symmetry, xy_symmetry):
+        self._symmetry = [xz_symmetry, xy_symmetry]
 
     def run(self):
         """Generates Panair inputfile and runs case.
