@@ -154,6 +154,25 @@ class Case:
         self._aero_state = [mach, alpha, beta]
 
     def add_network(self, network_name, network_data, network_type=1):
+        """Adds network.
+
+        Parameters
+        ----------
+        network_name : str
+            Name of network being added. This is used for updating networks and
+            in generation of inputfile.
+        network_data : 3D numpy array
+            Contains the cartesian coordinates of the network points. The first
+            index corresponds to the column, the second index corresponds to
+            the row, and the last index corresponds to the x, y, or
+            z-coordinate. Thus, the array shape is (nn, nm, 3). Ordering of
+            points in rows and columns determines the surface normal. See
+            Panair documentation for these details.
+        network_type : int
+            Panair network type. See Panair documentation for the different
+            types and corresponding numbering.
+
+        """
         self._networks.append([network_name, network_data, network_type])
 
     def update_network(self, network_name, network_data):
