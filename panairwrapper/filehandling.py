@@ -18,6 +18,7 @@ http://www.pdas.com/panairrefs.html
 """
 from collections import OrderedDict
 import numpy as np
+from math import copysign
 
 
 class InputFile:
@@ -93,9 +94,34 @@ class InputFile:
     def _format_str_opt(string):
         return '{0:<10}'.format(string)
 
+    def _format_coord(self, coordinates):
+        precision = [6, 6, 6]
+        for i, c in enumerate(coordinates):
+            precision[i] = self._fixed_width_precision(c)
+
+        s = ('{0[0]:<10.'+str(precision[0])+'f}' +
+             '{0[1]:<10.'+str(precision[1])+'f}' +
+             '{0[2]:<10.'+str(precision[2])+'f}')
+
+        return s.format(coordinates)
+
     @staticmethod
-    def _format_coord(coordinates):
-        return '{0[0]:<10f}{0[1]:<10f}{0[2]:<10f}'.format(coordinates)
+    def _fixed_width_precision(number):
+        precision = 8
+        if copysign(1, number) < 0:
+            precision -= 1
+        if abs(number) >= 10:
+            precision -= 1
+        if abs(number) >= 100:
+            precision -= 1
+        if abs(number) >= 1000:
+            precision -= 1
+        if abs(number) >= 10000:
+            precision -= 1
+        if abs(number) >= 100000:
+            raise RuntimeError("formatting not implemented")
+
+        return precision
 
     def _format_header(self, labels):
         header = ""
