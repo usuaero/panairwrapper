@@ -220,6 +220,7 @@ class PanairWrapper:
             self._generate_inputfile()
             self._call_panair()
 
+        print("Panair run finished.")
         return self._results
         # if self._check_if_successful():
         #     self._gather_results()
