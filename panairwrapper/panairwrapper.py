@@ -61,7 +61,7 @@ import shutil
 import numpy as np
 
 
-class Case:
+class PanairWrapper:
     """The primary access point for specifying and running a case.
 
     Parameters
