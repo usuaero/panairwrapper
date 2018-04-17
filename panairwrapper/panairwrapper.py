@@ -156,6 +156,9 @@ class PanairWrapper:
     def add_network(self, network_name, network_data, network_type=1):
         """Adds network.
 
+        Replaces existing network if network with specified name already
+        exists.
+
         Parameters
         ----------
         network_name : str
@@ -173,17 +176,15 @@ class PanairWrapper:
             types and corresponding numbering.
 
         """
-        self._networks.append([network_name, network_data, network_type])
-
-    def update_network(self, network_name, network_data):
         found = False
         for n in self._networks:
             if n[0] == network_name:
                 n[1] = network_data
+                n[2] = network_type
                 found = True
 
         if not found:
-            raise RuntimeError(network_name+" network name not found")
+            self._networks.append([network_name, network_data, network_type])
 
     def clear_networks(self):
         self._networks = []
