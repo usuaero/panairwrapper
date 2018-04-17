@@ -59,6 +59,28 @@ http://www.pdas.com/panair.html
 and is simple to install. Once installed the executable (should be 'panair')
 needs to be copied into the folder where panairwrapper is being used. 
 
+The default precision included in the Panair output files isn't very good
+for getting collecting off-body data. This can be remedied however by making
+a few small modifications to the source code before compiling panair.
+Specifically, change the formatting found at lines 38834-38836 in panair.f90.
+
+For example, change the following
+```fortran
+1001 format (1x,i4,i5     ,4x ,3f11.4                                  &
+     & ,4x  ,3f11.4                                                     &
+     & ,2x  ,f11.4          ,2x  ,f11.4           ,f11.4)
+```
+to
+```fortran
+1001 format (1x,i4,i5     ,4x ,3f13.8                                  &
+     & ,4x  ,3f13.8                                                     &
+     & ,2x  ,f13.8          ,2x  ,f13.8    ,1x       ,f13.8)
+```
+
+Additionaly, an approximately 5X speed up of Panair was obtained on our
+systems by compiling panair with the '-O3 -ffast-math' flags (gfortran compiler)
+over no optimization flags.
+
 ## Documentation
 
 See doc strings in code. 
