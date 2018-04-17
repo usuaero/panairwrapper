@@ -91,7 +91,6 @@ class PanairWrapper:
         self._symmetry = [True, False]
         self._networks = []
         self._offbody_points = None
-        self._overwrite = True
         self._results = Results(self._directory)
 
     def _generate_inputfile(self):
@@ -185,6 +184,9 @@ class PanairWrapper:
         if not found:
             raise RuntimeError(network_name+" network name not found")
 
+    def clear_networks(self):
+        self._networks = []
+
     def add_offbody_points(self, offbody_points):
         self._offbody_points = offbody_points
 
@@ -204,19 +206,19 @@ class PanairWrapper:
     def set_symmetry(self, xz_symmetry, xy_symmetry):
         self._symmetry = [xz_symmetry, xy_symmetry]
 
-    def run(self):
+    def run(self, overwrite=True):
         """Generates Panair inputfile and runs case.
 
         Returns
         -------
-        results : ?
+        Results
 
         Examples
         --------
 
         """
-        self._generate_dir()
-        if self._overwrite:
+        self._generate_dir(overwrite)
+        if overwrite:
             self._generate_inputfile()
             self._call_panair()
 
@@ -228,21 +230,19 @@ class PanairWrapper:
         # else:
         #     raise RuntimeError("Run not successful. Check panair.out for cause")
 
-    def _generate_dir(self):
+    def _generate_dir(self, overwrite):
         # create directory for case if it doesn't exist
         if not os.path.exists(self._directory):
             os.makedirs(self._directory)
         else:
-            overwrite = input("Case folder already exists. Overwrite? (y/n)")
-            if overwrite == "y":
-                self._overwrite = True
+            if overwrite is True:
                 # remove old files
                 files = os.listdir(self._directory)
                 for f in files:
                     if f.startswith('rwms'):
                         os.remove(os.path.join(self._directory, f))
-            elif overwrite == "n":
-                self._overwrite = False
+            elif overwrite is False:
+                pass
             else:
                 raise RuntimeError("option not recognized")
 
