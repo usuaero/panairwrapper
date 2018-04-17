@@ -218,6 +218,12 @@ class PanairWrapper:
         Examples
         --------
 
+        Raises
+        ------
+        RuntimeError
+            If Panair does not finish successfully
+
+
         """
         self._generate_dir(overwrite)
         if overwrite:
@@ -226,11 +232,6 @@ class PanairWrapper:
 
         print("Panair run finished.")
         return self._results
-        # if self._check_if_successful():
-        #     self._gather_results()
-        #     return self._results
-        # else:
-        #     raise RuntimeError("Run not successful. Check panair.out for cause")
 
     def _generate_dir(self, overwrite):
         # create directory for case if it doesn't exist
@@ -256,6 +257,11 @@ class PanairWrapper:
                              cwd=self._directory)
         p.communicate(self._filename.encode('ascii'))
 
+        success = self._results.check_successful()
+        print(success)
+        if not success:
+            raise RuntimeError("panair run not successful")
+
 
 class Results:
     """Handles the parsing of Panair output files for data retrieval"""
@@ -264,3 +270,6 @@ class Results:
 
     def get_offbody_data(self):
         return self._output_file.get_offbody_data()
+
+    def check_successful(self):
+        return self._output_file.check_successful()

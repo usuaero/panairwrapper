@@ -330,3 +330,14 @@ class OutputFile:
         data = self._lines_to_numpy(data_lines)
 
         return data
+
+    def check_successful(self):
+        with open(self._directory+"panair.err") as f:
+            lines = f.readlines()
+            words = lines[-1].split()
+            if words[0] == "ABORT":
+                success = False
+            else:
+                success = True
+
+        return success
