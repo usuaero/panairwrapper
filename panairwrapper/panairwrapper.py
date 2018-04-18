@@ -252,6 +252,11 @@ class PanairWrapper:
         # copy in panair.exec
         shutil.copy2('./'+self._panair_exec, self._directory)
 
+    def clean_up(self):
+        """Removes case folder and files"""
+        if os.path.exists(self._directory):
+            shutil.rmtree(self._directory)
+
     def _call_panair(self):
         p = subprocess.Popen('./'+self._panair_exec, stdin=subprocess.PIPE,
                              cwd=self._directory)
