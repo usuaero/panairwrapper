@@ -82,7 +82,7 @@ class PanairWrapper:
     --------
 
     """
-    def __init__(self, title, directory="./", description=""):
+    def __init__(self, title, directory="./", description="", exe='panair'):
         self._title = title
         self._directory = directory+"/panair_files/"
         self._filename = self._title.replace(" ", "_")+".INP"
@@ -92,7 +92,7 @@ class PanairWrapper:
         self._networks = []
         self._offbody_points = None
         self._results = Results(self._directory)
-        self._panair_exec = 'panair'
+        self._panair_exec = exe
 
     def _generate_inputfile(self):
 
@@ -250,7 +250,8 @@ class PanairWrapper:
                 raise RuntimeError("option not recognized")
 
         # copy in panair.exec
-        shutil.copy2('./'+self._panair_exec, self._directory)
+        panair_loc = os.path.join(os.path.dirname(__file__), "..")
+        shutil.copy2(os.path.join(panair_loc, self._panair_exec), self._directory)
 
     def clean_up(self):
         """Removes case folder and files"""
