@@ -103,7 +103,7 @@ class PanairWrapper:
         inputfile.symmetric(int(self._symmetry[0]), int(self._symmetry[1]))
 
         # aerodynamic state inputs
-        if self._aero_state:
+        if self._aero_state is not None:
             mach_number, alpha, beta = self._aero_state
             inputfile.mach(mach_number)
             inputfile.cases(1)
@@ -115,7 +115,7 @@ class PanairWrapper:
         inputfile.printout(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0)
 
         # network inputs
-        if self._networks:
+        if len(self._networks) > 0:
             network_list = list(self._networks)
 
             # add networks to inputfile, grouping them by network type
