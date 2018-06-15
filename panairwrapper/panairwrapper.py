@@ -226,8 +226,9 @@ class PanairWrapper:
 
 
         """
-        self._generate_dir(overwrite)
-        if overwrite:
+        dir_exists = self._generate_dir(overwrite)
+        if overwrite or (not dir_exists):
+            print("running panair")
             self._generate_inputfile()
             self._call_panair()
 
@@ -236,7 +237,8 @@ class PanairWrapper:
 
     def _generate_dir(self, overwrite):
         # create directory for case if it doesn't exist
-        if not os.path.exists(self._directory):
+        exists = os.path.exists(self._directory)
+        if not exists:
             os.makedirs(self._directory)
         else:
             if overwrite is True:
@@ -253,6 +255,8 @@ class PanairWrapper:
         # copy in panair.exec
         panair_loc = os.path.join(os.path.dirname(__file__), "..")
         shutil.copy2(os.path.join(panair_loc, self._panair_exec), self._directory)
+
+        return exists
 
     def clean_up(self):
         """Removes case folder and files"""
