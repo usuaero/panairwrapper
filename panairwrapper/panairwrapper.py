@@ -84,7 +84,7 @@ class PanairWrapper:
     """
     def __init__(self, title, directory="./", description="", exe='panair'):
         self._title = title
-        self._directory = directory+"/panair_files/"
+        self._directory = os.path.join(directory, "panair_files")
         self._filename = self._title.replace(" ", "_")+".INP"
         self._description = description
         self._aero_state = None
@@ -148,7 +148,8 @@ class PanairWrapper:
                                                     self._offbody_points)
 
         # write inputfile
-        inputfile.write_inputfile(self._directory+self._filename)
+        inputfile.write_inputfile(os.path.join(self._directory,
+                                               self._filename))
 
     def set_aero_state(self, mach=0, alpha=0, beta=0):
         self._aero_state = [mach, alpha, beta]

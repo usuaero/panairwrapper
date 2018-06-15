@@ -19,6 +19,7 @@ http://www.pdas.com/panairrefs.html
 from collections import OrderedDict
 import numpy as np
 from math import copysign
+from os.path import join
 
 
 class InputFile:
@@ -304,7 +305,7 @@ class OutputFile:
         # retrieves lines inside block
         begin_flag = "0*b*"+block_name
         end_flag = "0*e*"+block_name
-        with open(self._directory+"panair.out") as f:
+        with open(join(self._directory, "panair.out")) as f:
             lines = f.readlines()
             count = 0
             while begin_flag not in lines[count]:
@@ -332,7 +333,7 @@ class OutputFile:
         return data
 
     def check_successful(self):
-        with open(self._directory+"panair.err") as f:
+        with open(join(self._directory, "panair.err")) as f:
             lines = f.readlines()
             words = lines[-1].split()
             if words[0] == "ABORT":
