@@ -93,6 +93,7 @@ class PanairWrapper:
         self._offbody_points = None
         self._results = Results(self._directory)
         self._panair_exec = exe
+        self._panair_loc = os.path.join(os.path.dirname(__file__), "..")
 
     def _generate_inputfile(self):
 
@@ -253,8 +254,7 @@ class PanairWrapper:
                 raise RuntimeError("option not recognized")
 
         # copy in panair.exec
-        panair_loc = os.path.join(os.path.dirname(__file__), "..")
-        shutil.copy2(os.path.join(panair_loc, self._panair_exec), self._directory)
+        shutil.copy2(os.path.join(self._panair_loc, self._panair_exec), self._directory)
 
         return exists
 
@@ -264,7 +264,7 @@ class PanairWrapper:
             shutil.rmtree(self._directory)
 
     def _call_panair(self):
-        p = subprocess.Popen('./'+self._panair_exec, stdin=subprocess.PIPE,
+        p = subprocess.Popen(os.path.join(self._panair_loc, self._panair_exec), stdin=subprocess.PIPE,
                              cwd=self._directory)
         p.communicate(self._filename.encode('ascii'))
 
