@@ -88,6 +88,7 @@ class PanairWrapper:
         self._filename = self._title.replace(" ", "_")+".INP"
         self._description = description
         self._aero_state = None
+        self._ref_data = None
         self._symmetry = [True, False]
         self._networks = []
         self._offbody_points = None
@@ -112,6 +113,12 @@ class PanairWrapper:
             inputfile.yawangle(beta, [beta])
         else:
             raise RuntimeError("Aero state inputs must be provided.")
+
+        # reference data
+        if self._ref_data is not None:
+            X0, area, span, chord = self._ref_data
+            inputfile.referencedata(X0[0], X0[1], X0[2],
+                                    area, span, chord, span)
 
         inputfile.printout(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0)
 
@@ -154,6 +161,9 @@ class PanairWrapper:
 
     def set_aero_state(self, mach=0, alpha=0, beta=0):
         self._aero_state = [mach, alpha, beta]
+
+    def set_reference_data(self, area, span, chord, X0=[0., 0., 0.]):
+        self._ref_data = [X0, area, span, chord]
 
     def add_network(self, network_name, network_data, network_type=1):
         """Adds network.
@@ -282,6 +292,9 @@ class Results:
 
     def get_offbody_data(self):
         return self._output_file.get_offbody_data()
+
+    def get_forces_and_moments(self):
+        return self._output_file.get_forces_and_moments()
 
     def check_successful(self):
         return self._output_file.check_successful()

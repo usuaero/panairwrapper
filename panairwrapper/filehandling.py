@@ -333,6 +333,26 @@ class OutputFiles:
 
         return data
 
+    def get_forces_and_moments(self):
+        with open(join(self._directory, "ffmf")) as f:
+            lines = f.readlines()
+
+        data1 = list(map(float, lines[17].split()))
+        data2 = list(map(float, lines[18].split()))
+
+        ffmf = {'cl': data1[3],
+                'cdi': data1[4],
+                'cy': data1[5],
+                'fx': data1[6],
+                'fy': data1[7],
+                'fz': data1[8],
+                'mx': data2[0],
+                'my': data2[1],
+                'mz': data2[2],
+                'area': data2[3]}
+
+        return ffmf
+
     def check_successful(self):
         with open(join(self._directory, "panair.err")) as f:
             lines = f.readlines()
