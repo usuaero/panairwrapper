@@ -20,6 +20,7 @@ from collections import OrderedDict
 import numpy as np
 from math import copysign
 from os.path import join
+import re
 
 
 class InputFile:
@@ -292,7 +293,7 @@ class InputFile:
         self._input_dict["XYZ OF OFF-BODY POINTS"] = offbody_input
 
 
-class OutputFile:
+class OutputFiles:
     """Handles the parsing of Panair output file.
 
     Data for the output blocks listed in the panair.out file generated
@@ -342,3 +343,31 @@ class OutputFile:
                 success = True
 
         return success
+
+    def parse_agps(self):
+        # parses data in agps file into list.
+        # List contains network #, column #, row #, x, y, z, Cp
+        # for each point.
+        with open(join(self._directory, "agps")) as f:
+            lines = f.readlines()
+
+        data = []
+        n = 0
+        c = 0
+        for line in lines[6:]:
+            network = []
+            if re.match('n[0-9]*', line) is not None:
+                network, column = line.split('c')
+                n = int(network[1:])
+                c = int(column)
+            elif re.match('\*eof', line) is not None:
+                pass
+            elif re.match(' irow', line) is not None:
+                pass
+            else:
+                row_data = line.split()
+                r = int(row_data[0])
+                xyzCp = list(map(float, row_data[1:]))
+                data.append([n, c, r]+xyzCp)
+
+        return data

@@ -277,10 +277,22 @@ class PanairWrapper:
 class Results:
     """Handles the parsing of Panair output files for data retrieval"""
     def __init__(self, directory):
-        self._output_file = fh.OutputFile(directory)
+        self._output_file = fh.OutputFiles(directory)
+        self._directory = directory
 
     def get_offbody_data(self):
         return self._output_file.get_offbody_data()
 
     def check_successful(self):
         return self._output_file.check_successful()
+
+    def write_agps(self):
+        agps_data = self._output_file.parse_agps()
+
+        with open(os.path.join(self._directory, "agps.csv"), 'w') as f:
+            for row in agps_data:
+                for i, v in enumerate(row):
+                    f.write(str(v))
+                    if i < 6:
+                        f.write(',')
+                f.write('\n')
