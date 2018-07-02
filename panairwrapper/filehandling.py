@@ -391,3 +391,88 @@ class OutputFiles:
                 data.append([n, c, r]+xyzCp)
 
         return data
+
+
+    def generate_vtk(self, filename='panair', data=None) :
+        '''
+        Function to generate a set of vtk files from the output data.
+        
+        INPUTS : 
+        - 'filename' is a string to use in filenames. 
+        It will be followed by 'network' and the # of that network.
+        For example 'panair_network_1'
+        When opening files in Paraview, it will suggest you to import all 
+        similar files as a group, but you should select them all as individual
+        files instead as groups are intended to be the same geometry through 
+        different timesteps.
+        - 'data' is used if you want to send to use a different set of data than
+        the one from the agps. If left to None, the function will get data from the
+        agps.
+        
+        OUTPUT :
+        The function will produce one or several files, one for each network, 
+        in the folder it's run from.
+        '''
+        import evtk.hl
+        if data is None:
+            data = self.parse_agps()
+        
+        networks = int(max(np.array(data)[:,0]))
+        all_points = []
+        for i in range(networks) :
+            all_points.append([])
+        for p in data :
+            all_points[int(p[0]-1)].append(p)
+
+        for n in range(networks) :
+            points_array = np.array(all_points[n])
+            n_columns = int(max(points_array[:,1]))
+            n_rows = int(max(points_array[:,2]))
+            
+            X = np.zeros((n_rows, n_columns, 1))
+            Y = np.zeros((n_rows, n_columns, 1))
+            Z = np.zeros((n_rows, n_columns, 1))
+            CP = np.zeros((n_rows, n_columns, 1))
+
+            for p in points_array :
+                X[int(p[2]-1),int(p[1]-1), 0] = p[3]
+                Y[int(p[2]-1),int(p[1]-1), 0] = p[4]
+                Z[int(p[2]-1),int(p[1]-1), 0] = p[5]
+                CP[int(p[2]-1),int(p[1]-1), 0] = p[6]
+
+            evtk.hl.gridToVTK(filename+'_network'+str(n+1), 
+                              X, Y, Z, pointData = {"CP" : CP})
+        
+        
+def generate_vtk_input(data, filename='panair') :
+    '''
+    Function to generate vtk files from a panair input mesh 
+    INPUT :
+    - data is a list of networks which are 3D arrays with the dimensions being 
+    columns, rows, and coordinates)
+    - 'filename' is a string to use in filenames. 
+    For example 'panair' will result in files called 'panair_network_1', etc.
+    
+    OUTPUT : 
+    The function will produce one or several files, one for each network, 
+    in the folder it's run from.
+    '''
+    import evtk.hl
+    networks = len(data)
+    for n in range(networks) :
+        points_array = np.array(data[n])
+        n_columns = int(points_array.shape[0])
+        n_rows = int(points_array.shape[1])
+        
+        X = np.zeros((n_rows, n_columns, 1))
+        Y = np.zeros((n_rows, n_columns, 1))
+        Z = np.zeros((n_rows, n_columns, 1))
+        
+        for i in range(n_columns) :
+            for j in range(n_rows) :
+                X[j, i, 0] = points_array[i, j, 0]
+                Y[j, i, 0] = points_array[i, j, 1]
+                Z[j, i, 0] = points_array[i, j, 2]
+                
+        evtk.hl.gridToVTK(filename+'_network'+str(n+1), X, Y, Z)
+
