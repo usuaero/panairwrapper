@@ -42,6 +42,100 @@ def axisymmetric_surf(data_x, data_r, N_theta):
     return network_list
 
 
+def meshparameterspace(shape=(20, 20), psi_limits=(None, None),
+                       eta_limits=(None, None), flip=False,
+                       cos_spacing=False):
+    """Builds curvilinear mesh inside parameter space.
+
+    """
+    if cos_spacing:
+        spacing = cosine_spacing
+    else:
+        spacing = np.linspace
+
+    n_psi, n_eta = shape
+    psi_lower, psi_upper = psi_limits
+    eta_lower, eta_upper = eta_limits
+
+    # if limits aren't specified, set lower to 0 and upper to 1
+    if psi_lower is None:
+        psi_lower = np.full((n_eta, 2), 0.)
+        eta_min = eta_lower[0, 1] if eta_lower is not None else 0.
+        eta_max = eta_upper[0, 1] if eta_upper is not None else 1.
+        psi_lower[:, 1] = spacing(eta_min, eta_max, n_eta)
+    if psi_upper is None:
+        psi_upper = np.full((n_eta, 2), 1.)
+        eta_min = eta_lower[-1, 1] if eta_lower is not None else 0.
+        eta_max = eta_upper[-1, 1] if eta_upper is not None else 1.
+        psi_upper[:, 1] = spacing(eta_min, eta_max, n_eta)
+    if eta_lower is None:
+        eta_lower = np.full((n_psi, 2), 0.)
+        psi_min = psi_lower[0, 0] if psi_lower is not None else 0.
+        psi_max = psi_upper[0, 0] if psi_upper is not None else 1.
+        eta_lower[:, 0] = spacing(psi_min, psi_max, n_psi)
+    if eta_upper is None:
+        eta_upper = np.full((n_psi, 2), 1.)
+        psi_min = psi_lower[-1, 0] if psi_lower is not None else 0.
+        psi_max = psi_upper[-1, 0] if psi_upper is not None else 1.
+        eta_upper[:, 0] = spacing(psi_min, psi_max, n_psi)
+
+    grid = mesh_curvilinear(psi_lower, psi_upper, eta_lower, eta_upper,
+                            spacing)
+
+    if flip:
+        grid = np.flipud(grid)
+
+    return grid[:, :, 0], grid[:, :, 1]
+
+
+def mesh_curvilinear(x_lower, x_upper, y_lower, y_upper, spacing=None):
+    if spacing is None:
+        spacing = np.linspace
+
+    # verify that corner points match
+    xlyl = np.array_equal(x_lower[0], y_lower[0])
+    xlyu = np.array_equal(x_lower[-1], y_upper[0])
+    xuyl = np.array_equal(x_upper[0], y_lower[-1])
+    xuyu = np.array_equal(x_upper[-1], y_upper[-1])
+    # print(x_lower[0], y_lower[0])
+    # print(x_lower[-1], y_upper[0])
+    # print(x_upper[0], y_lower[-1])
+    # print(x_upper[-1], y_upper[-1])
+
+    if not (xlyl and xlyu and xuyl and xuyu):
+        print(xlyl, xlyu, xuyl, xuyu)
+        raise RuntimeError("corner points do not match")
+
+    n_x = y_lower.shape[0]
+    n_y = x_lower.shape[0]
+
+    grid = np.zeros((n_x, n_y, 2))
+
+    # boundary points are set to match limits exactly
+    grid[0, :] = x_lower
+    grid[-1, :] = x_upper
+    grid[:, 0] = y_lower
+    grid[:, -1] = y_upper
+
+    # inner points are evenly spaced between corresponding limits in x and y
+    for i in range(1, n_x-1):
+        grid[i, 1:-1, 1] = spacing(y_lower[i, 1], y_upper[i, 1], n_y)[1:-1]
+    for j in range(1, n_y-1):
+        grid[1:-1, j, 0] = spacing(x_lower[j, 0], x_upper[j, 0], n_x)[1:-1]
+
+    return grid
+
+
+def cosine_spacing(start, stop, num=50, offset=0):
+    # calculates the cosine spacing
+    index = np.linspace(0., 1., num)
+    spacing = .5*(1.-np.cos(np.pi*(index-offset)))
+
+    points = start+spacing*(stop-start)
+
+    return points
+
+
 def _distance_point_to_line(P1, P2, PQ):
     x0, y0 = PQ
     x1, y1 = P1
