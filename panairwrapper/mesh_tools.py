@@ -22,8 +22,9 @@ def axisymmetric_surf(data_x, data_r, N_theta):
 
     num_points = len(data_x)
 
-    num_network = int(num_points/250)
-    if not (num_points % 250) == 0:
+    max_axial = 200
+    num_network = int(num_points/max_axial)
+    if not (num_points % max_axial) == 0:
         num_network += 1
     nn = int(num_points/num_network)
 
