@@ -56,6 +56,7 @@ TODO: Move usage explanation to README.md
 from collections import OrderedDict
 import panairwrapper.filehandling as fh
 import os
+import sys
 import subprocess
 import shutil
 import numpy as np
@@ -241,7 +242,8 @@ class PanairWrapper:
         """
         dir_exists = self._generate_dir(overwrite)
         if overwrite or (not dir_exists):
-            print("running panair")
+            print("running panair, please wait")
+            sys.stdout.flush()
             self._generate_inputfile()
             self._call_panair()
 
