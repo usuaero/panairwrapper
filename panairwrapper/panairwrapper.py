@@ -165,7 +165,7 @@ class PanairWrapper:
     def set_reference_data(self, area, span, chord, X0=[0., 0., 0.]):
         self._ref_data = [X0, area, span, chord]
 
-    def add_network(self, network_name, network_data, network_type=1):
+    def add_network(self, network_name, network_data, network_type=1, xy_indexing=False):
         """Adds network.
 
         Replaces existing network if network with specified name already
@@ -188,15 +188,17 @@ class PanairWrapper:
             types and corresponding numbering.
 
         """
+        if not xy_indexing:
+            _network_data = np.swapaxes(network_data, 0, 1)
         found = False
         for n in self._networks:
             if n[0] == network_name:
-                n[1] = network_data
+                n[1] = _network_data
                 n[2] = network_type
                 found = True
 
         if not found:
-            self._networks.append([network_name, network_data, network_type])
+            self._networks.append([network_name, _network_data, network_type])
 
     def clear_networks(self):
         self._networks = []
@@ -309,3 +311,6 @@ class Results:
                     if i < 6:
                         f.write(',')
                 f.write('\n')
+
+    def write_vtk(self):
+        self._output_file.generate_vtk()
