@@ -42,6 +42,27 @@ def axisymmetric_surf(data_x, data_r, N_theta):
     return network_list
 
 
+def generate_wake(te_points, x_end, n_points=10, angle_of_attack=0.):
+    # check that x_end is downstream of all trailing edge points
+    if not np.all(te_points[:, 0] < x_end):
+        raise RuntimeError("wake must terminate downstream of trailing edge")
+
+    Ny = te_points.shape[0]
+    wake = np.zeros((n_points, Ny, 3))
+    aoa_r = angle_of_attack*np.pi/180.
+    for j, p in enumerate(te_points):
+        x_te, y_te, z_te = p
+        length = (x_end-x_te)/np.cos(aoa_r)
+        X_0 = np.linspace(0., length, n_points)
+        X_r = X_0*np.cos(aoa_r)
+        Z_r = X_0*np.sin(aoa_r)
+        wake[:, j, 0] = x_te+X_r
+        wake[:, j, 1] = y_te
+        wake[:, j, 2] = z_te+Z_r
+
+    return wake
+
+
 def meshparameterspace(shape=(20, 20), psi_limits=(None, None),
                        eta_limits=(None, None), flip=False,
                        cos_spacing=False):
