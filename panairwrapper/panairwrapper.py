@@ -191,6 +191,8 @@ class PanairWrapper:
         """
         if not xy_indexing:
             _network_data = np.swapaxes(network_data, 0, 1)
+        else:
+            _network_data = network_data
         found = False
         for n in self._networks:
             if n[0] == network_name:
