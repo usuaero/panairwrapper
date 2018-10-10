@@ -209,10 +209,10 @@ class PanairWrapper:
     def add_offbody_points(self, offbody_points):
         self._offbody_points = offbody_points
 
-    def set_sensor(self, mach, r_over_l, l, n_lengths=2.):
+    def set_sensor(self, mach, aoa, r_over_l, l, n_lengths=1.8):
         n_points = 1600
 
-        mu = np.arcsin(1./mach)
+        mu = np.arcsin(1./mach)-aoa*np.pi/180.
         R = r_over_l*l
         x_start = R/np.tan(mu)-0.1*l
         x_end = x_start+n_lengths*l
