@@ -248,6 +248,7 @@ class PanairWrapper:
             sys.stdout.flush()
             self._generate_inputfile()
             self._call_panair()
+            self._cleanup_rwms()
 
         print("Panair run finished.")
         return self._results
@@ -257,17 +258,6 @@ class PanairWrapper:
         exists = os.path.exists(self._directory)
         if not exists:
             os.makedirs(self._directory)
-        else:
-            if overwrite is True:
-                # remove old files
-                files = os.listdir(self._directory)
-                for f in files:
-                    if f.startswith('rwms'):
-                        os.remove(os.path.join(self._directory, f))
-            elif overwrite is False:
-                pass
-            else:
-                raise RuntimeError("option not recognized")
 
         # copy in panair.exec
         shutil.copy2(os.path.join(self._panair_loc, self._panair_exec), self._directory)
@@ -278,6 +268,13 @@ class PanairWrapper:
         """Removes case folder and files"""
         if os.path.exists(self._directory):
             shutil.rmtree(self._directory)
+
+    def _cleanup_rwms(self):
+        # remove rwms and ft files from directory
+        files = os.listdir(self._directory)
+        for f in files:
+            if f.startswith('rwms') or f.startswith('ft'):
+                os.remove(os.path.join(self._directory, f))
 
     def _call_panair(self):
         p = subprocess.Popen(os.path.join(self._panair_loc, self._panair_exec), stdin=subprocess.PIPE,
