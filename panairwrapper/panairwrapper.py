@@ -83,6 +83,7 @@ class PanairWrapper:
     --------
 
     """
+
     def __init__(self, title, directory="./", description="", exe='panair'):
         self._title = title
         self._directory = os.path.join(directory, "panair_files")
@@ -295,6 +296,7 @@ class PanairWrapper:
 
 class Results:
     """Handles the parsing of Panair output files for data retrieval"""
+
     def __init__(self, directory):
         self._output_file = fh.OutputFiles(directory)
         self._directory = directory
