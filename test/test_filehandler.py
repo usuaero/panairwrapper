@@ -40,3 +40,13 @@ def test_inputfile():
     inputfile.write_inputfile(newfilename)
 
     assert filecmp.cmp(newfilename, reffilename)
+
+
+def test_read_cp_data():
+    # tests the function for parsing control point data out of panair.out
+    output = fh.OutputFiles(TESTFILE_DIR)
+    output._output_all = True
+
+    data = output.generate_vtk()
+
+    assert False

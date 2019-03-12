@@ -299,20 +299,22 @@ class OutputFiles:
     Data for the output blocks listed in the panair.out file generated
     by Panair is parsed and then made available in numpy arrays.
     """
-    def __init__(self, directory):
+    def __init__(self, directory, output_all=False):
         self._directory = directory
+        self._output_all = output_all
 
     def _get_block(self, block_name):
         # retrieves lines inside block
         begin_flag = "0*b*"+block_name
         end_flag = "0*e*"+block_name
+
         with open(join(self._directory, "panair.out")) as f:
             lines = f.readlines()
             count = 0
             while begin_flag not in lines[count]:
                 count += 1
             front = count+1
-            while end_flag not in lines[count]:
+            while (end_flag not in lines[count]) and count < len(lines)-1:
                 count += 1
             back = count
 
@@ -332,6 +334,130 @@ class OutputFiles:
         data = self._lines_to_numpy(data_lines)
 
         return data
+
+    def parse_controlpoint_data(self):
+        lines_raw = self._get_block("solution")
+        Nline = len(lines_raw)
+
+        # if output_all:
+        #     self._preprocess(lines_raw)
+
+        network_lines = []
+        network_info = []
+        i = 7
+        is_network_data = False
+#         for line in lines_raw[7:]:
+        while i < (Nline-1):
+            line = lines_raw[i]
+
+            if "network id:" in line:
+                info = line.split()
+                if self._output_all:
+                    network_id = int(info[3])
+                else:
+                    network_id = int(info[4])
+
+                if network_id > len(network_lines):
+                    network_lines.append([])
+                    # get network info [id, (nRow, nCol)]
+                    network_info.append([network_id, (int(info[-5]), int(info[-1]))])
+
+                is_network_data = True
+                i += 1
+                continue
+
+            if line == "1\n":
+                is_network_data = False
+                i += 1
+                continue
+
+            if is_network_data:
+                if "jc" in line:
+                    if self._output_all:
+                        line = (line[:-1]+lines_raw[i+1][:-1] +
+                                lines_raw[i+2][:-1]+lines_raw[i+3])
+                        i += 3
+                    var = line.split()
+                    print(var)
+                elif not line.strip():
+                    pass
+                else:
+                    if self._output_all:
+                        line = (line[:-1]+lines_raw[i+1][:-1] +
+                                lines_raw[i+2][:-1]+lines_raw[i+3])
+                        i += 3
+                    network_lines[network_id-1].append(line.split())
+                    print(network_lines[network_id-1][-1])
+
+            i += 1
+
+        for i, n in enumerate(network_lines):
+            n_data = [list(map(float, r)) for r in n]
+            header = " ".join(var)
+            np.savetxt("network_"+str(i)+"_pointdata.csv", np.array(n_data), header=header, comments="")
+
+        network_data = [self.orderdata(info, data, var)
+                        for info, data in zip(network_info, network_lines)]
+
+        return network_data
+
+    @staticmethod
+    def _preprocess(lines_raw):
+        # puts all 4 lines of output data on 1 line for the case of all
+        # 48 solution variables being output
+        count = 0
+        Nlines = len(lines_raw)
+        is_network_data = False
+        new_lines = []
+
+        while count < (Nlines-1):
+            line = lines_raw[count]
+            if "network id:" in line:
+                is_network_data = True
+                count += 1
+                continue
+
+            if line == "1\n":
+                is_network_data = False
+
+            if is_network_data:
+                if "jc" in line:
+                    new_lines.append(line[:-1]+lines_raw[count+1][:-1] +
+                                     lines_raw[count+2][:-1]+lines_raw[count+3])
+                    print(new_lines[-1])
+                    count += 3
+                elif not line.strip():
+                    pass
+                else:
+                    new_lines.append(line[:-1]+lines_raw[count+1][:-1] +
+                                     lines_raw[count+2][:-1]+lines_raw[count+3])
+                    print(new_lines[-1])
+                    count += 3
+
+            count += 1
+
+    @staticmethod
+    def orderdata(info, data, var):
+        nrow, ncol = info[1]
+        data_ordered = {}
+
+        # initialize arrays for holding data
+        for v in var:
+            data_ordered[v] = np.zeros((nrow, ncol, 1))
+
+        # order data into arrays
+        for i, line in enumerate(data):
+            c = i % nrow
+            r = (i-c)//nrow
+            for ii, v in enumerate(var):
+                data_ordered[v][c, r, 0] = line[ii]
+
+        # count = 0
+        # for i in nrow:
+        #     for j in ncol:
+        #         for v in var:
+        #             data_ordered[v][i, j] = data[count]
+        return data_ordered
 
     def get_forces_and_moments(self):
         with open(join(self._directory, "ffmf")) as f:
@@ -392,74 +518,79 @@ class OutputFiles:
 
         return data
 
-
-    def generate_vtk(self, filename='panair', data=None) :
+    def generate_vtk(self, filename='panair', data=None):
         '''
         Function to generate a set of vtk files from the output data.
-        
-        INPUTS : 
-        - 'filename' is a string to use in filenames. 
+
+        INPUTS :
+        - 'filename' is a string to use in filenames.
         It will be followed by 'network' and the # of that network.
         For example 'panair_network_1'
-        When opening files in Paraview, it will suggest you to import all 
+        When opening files in Paraview, it will suggest you to import all
         similar files as a group, but you should select them all as individual
-        files instead as groups are intended to be the same geometry through 
+        files instead as groups are intended to be the same geometry through
         different timesteps.
         - 'data' is used if you want to send to use a different set of data than
         the one from the agps. If left to None, the function will get data from the
         agps.
-        
+
         OUTPUT :
-        The function will produce one or several files, one for each network, 
+        The function will produce one or several files, one for each network,
         in the folder it's run from.
         '''
         import evtk.hl
         if data is None:
             data = self.parse_agps()
-        
-        networks = int(max(np.array(data)[:,0]))
+            celldata = self.parse_controlpoint_data()
+            ncelldata = len(celldata)
+
+        networks = int(max(np.array(data)[:, 0]))
         all_points = []
-        for i in range(networks) :
+        for i in range(networks):
             all_points.append([])
-        for p in data :
+        for p in data:
             all_points[int(p[0]-1)].append(p)
 
-        for n in range(networks) :
+        for n in range(networks):
             points_array = np.array(all_points[n])
-            n_columns = int(max(points_array[:,1]))
-            n_rows = int(max(points_array[:,2]))
-            
+            n_columns = int(max(points_array[:, 1]))
+            n_rows = int(max(points_array[:, 2]))
+
             X = np.zeros((n_rows, n_columns, 1))
             Y = np.zeros((n_rows, n_columns, 1))
             Z = np.zeros((n_rows, n_columns, 1))
             CP = np.zeros((n_rows, n_columns, 1))
 
-            for p in points_array :
-                X[int(p[2]-1),int(p[1]-1), 0] = p[3]
-                Y[int(p[2]-1),int(p[1]-1), 0] = p[4]
-                Z[int(p[2]-1),int(p[1]-1), 0] = p[5]
-                CP[int(p[2]-1),int(p[1]-1), 0] = p[6]
+            for p in points_array:
+                X[int(p[2]-1), int(p[1]-1), 0] = p[3]
+                Y[int(p[2]-1), int(p[1]-1), 0] = p[4]
+                Z[int(p[2]-1), int(p[1]-1), 0] = p[5]
+                CP[int(p[2]-1), int(p[1]-1), 0] = p[6]
 
-            evtk.hl.gridToVTK(filename+'_network'+str(n+1), 
-                              X, Y, Z, pointData = {"CP" : CP})
-        
-        
-def generate_vtk_input(data, filename='panair') :
+            if n < ncelldata:
+                evtk.hl.gridToVTK(filename+'_network'+str(n+1),
+                                  X, Y, Z, cellData=celldata[n], pointData={"CP": CP})
+            else:
+                evtk.hl.gridToVTK(filename+'_network'+str(n+1),
+                                  X, Y, Z, pointData={"CP": CP})
+
+
+def generate_vtk_input(data, filename='panair'):
     '''
-    Function to generate vtk files from a panair input mesh 
+    Function to generate vtk files from a panair input mesh
     INPUT :
-    - data is a list of networks which are 3D arrays with the dimensions being 
+    - data is a list of networks which are 3D arrays with the dimensions being
     columns, rows, and coordinates)
-    - 'filename' is a string to use in filenames. 
+    - 'filename' is a string to use in filenames.
     For example 'panair' will result in files called 'panair_network_1', etc.
-    
-    OUTPUT : 
-    The function will produce one or several files, one for each network, 
+
+    OUTPUT :
+    The function will produce one or several files, one for each network,
     in the folder it's run from.
     '''
     import evtk.hl
     networks = len(data)
-    for n in range(networks) :
+    for n in range(networks):
         points_array = np.array(data[n])
         n_columns = int(points_array.shape[0])
         n_rows = int(points_array.shape[1])

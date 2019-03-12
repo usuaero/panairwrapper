@@ -90,6 +90,7 @@ class PanairWrapper:
         self._description = description
         self._aero_state = None
         self._ref_data = None
+        self._output_all = False
         self._symmetry = [True, False]
         self._networks = []
         self._offbody_points = None
@@ -121,7 +122,10 @@ class PanairWrapper:
             inputfile.referencedata(X0[0], X0[1], X0[2],
                                     area, span, chord, span)
 
-        inputfile.printout(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0)
+        if self._output_all:
+            inputfile.printout(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        else:
+            inputfile.printout(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0)
 
         # network inputs
         if len(self._networks) > 0:
@@ -165,6 +169,10 @@ class PanairWrapper:
 
     def set_reference_data(self, area, span, chord, X0=[0., 0., 0.]):
         self._ref_data = [X0, area, span, chord]
+
+    def set_output_all(self, output_all):
+        self._output_all = output_all
+        self._results._output_file._output_all = output_all
 
     def add_network(self, network_name, network_data, network_type=1, xy_indexing=False):
         """Adds network.
@@ -244,10 +252,10 @@ class PanairWrapper:
         """
         dir_exists = self._generate_dir(overwrite)
         if overwrite or (not dir_exists):
-            print("running panair, please wait")
-            sys.stdout.flush()
             self._generate_inputfile()
-            self._call_panair()
+        print("running panair, please wait")
+        sys.stdout.flush()
+        self._call_panair()
 
         print("Panair run finished.")
         return self._results
@@ -257,17 +265,12 @@ class PanairWrapper:
         exists = os.path.exists(self._directory)
         if not exists:
             os.makedirs(self._directory)
-        else:
-            if overwrite is True:
-                # remove old files
-                files = os.listdir(self._directory)
-                for f in files:
-                    if f.startswith('rwms'):
-                        os.remove(os.path.join(self._directory, f))
-            elif overwrite is False:
-                pass
-            else:
-                raise RuntimeError("option not recognized")
+
+        # remove old rwms case files
+        files = os.listdir(self._directory)
+        for f in files:
+            if f.startswith('rwms'):
+                os.remove(os.path.join(self._directory, f))
 
         # copy in panair.exec
         shutil.copy2(os.path.join(self._panair_loc, self._panair_exec), self._directory)
