@@ -378,7 +378,6 @@ class OutputFiles:
                                 lines_raw[i+2][:-1]+lines_raw[i+3])
                         i += 3
                     var = line.split()
-                    print(var)
                 elif not line.strip():
                     pass
                 else:
@@ -387,7 +386,6 @@ class OutputFiles:
                                 lines_raw[i+2][:-1]+lines_raw[i+3])
                         i += 3
                     network_lines[network_id-1].append(line.split())
-                    print(network_lines[network_id-1][-1])
 
             i += 1
 
@@ -424,14 +422,12 @@ class OutputFiles:
                 if "jc" in line:
                     new_lines.append(line[:-1]+lines_raw[count+1][:-1] +
                                      lines_raw[count+2][:-1]+lines_raw[count+3])
-                    print(new_lines[-1])
                     count += 3
                 elif not line.strip():
                     pass
                 else:
                     new_lines.append(line[:-1]+lines_raw[count+1][:-1] +
                                      lines_raw[count+2][:-1]+lines_raw[count+3])
-                    print(new_lines[-1])
                     count += 3
 
             count += 1
