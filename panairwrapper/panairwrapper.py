@@ -96,10 +96,7 @@ class PanairWrapper:
         self._offbody_points = None
         self._results = Results(self._directory)
         self._panair_exec = exe
-        if os.name == 'nt':
-            self._panair_loc = os.path.dirname(__file__)
-        else:
-            self._panair_loc = os.path.join(os.path.dirname(__file__), "..")
+        self._panair_loc = os.path.join(os.path.dirname(__file__), "..")
 
     def _generate_inputfile(self):
 
