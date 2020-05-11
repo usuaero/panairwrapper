@@ -10,4 +10,5 @@ setup(name='panairwrapper',
       author_email='doug.hunsaker@usu.edu',
       license='MIT',
       packages=['panairwrapper'],
+      install_requires=['numpy', 'scipy', 'PyQt5', 'pyqtgraph', 'PyOpenGL'],
       zip_safe=False)
